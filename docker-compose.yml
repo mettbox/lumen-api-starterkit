@@ -1,0 +1,55 @@
+version: '3'
+
+networks:
+  apibase:
+    driver: bridge
+
+services:
+  mariadb:
+    image: mariadb:10.3.30-focal
+    container_name: apibase_mariadb
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: apibase
+      MYSQL_USER: apibase
+      MYSQL_PASSWORD: apibase
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./docker/mariadb/data/mariadb:/var/lib/mysql
+      - ./docker/mariadb/init:/docker-entrypoint-initdb.d
+    networks:
+      - apibase
+
+  apibase_fpm:
+    build:
+      context: .
+      dockerfile: docker/fpm/Dockerfile
+    image: apibase/api/fpm:dev
+    container_name: apibase_fpm
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    tty: true
+    working_dir: /var/www/html
+    volumes:
+      - ./api:/var/www/html
+      # make sure to not override vendor in container
+      - /var/www/html/vendor
+    networks:
+      - apibase
+
+  apibase_proxy:
+    image: nginx:alpine
+    container_name: apibase_proxy
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+    volumes:
+      - ./api:/var/www/html
+      - ./docker/proxy/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - apibase

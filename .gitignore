@@ -1,0 +1,15 @@
+.idea/
+.vscode/
+docker/mariadb/data/
+!docker/mariadb/data/.gitkeep
+
+/api/node_modules
+/api/public/hot
+/api/public/storage
+/api/storage/*.key
+/api/vendor
+
+.env
+.phpunit.result.cache
+npm-debug.log
+yarn-error.log
